@@ -24,7 +24,7 @@ def masked_fields(fields: Union[List[str], Tuple[str]]) -> None:
     __masked_fields = tuple(fields)
 
 
-def mask_fields(data: Union[Dict, List, Tuple]) -> Union[Dict, List, Tuple]:
+def mask_fields(data: Union[Dict, List, Tuple, Any]) -> Union[Dict, List, Tuple, Any]:
     if isinstance(data, dict):
         return __mask_dict(data)
     elif isinstance(data, (list, tuple)):
@@ -48,7 +48,7 @@ def masked_params(params: Union[List[str], Tuple[str]]) -> None:
     __masked_params = tuple(params)
 
 
-def mask_params(data: Union[Dict, List, Tuple]) -> Union[Dict, List, Tuple]:
+def mask_params(data: Union[Dict, List, Tuple, Any]) -> Union[Dict, List, Tuple, Any]:
     if isinstance(data, dict):
         return __mask_params_dict(data)
     elif isinstance(data, (list, tuple)):
