@@ -103,6 +103,11 @@ def wrap_session_request(wrapped, instance, args, kwargs):
     _tracer.add_attribute_to_current_span(
         "component", "HTTP")
 
+    # Add request body for POST and PUT requests
+    if method.upper() in ('POST', 'PUT'):
+        _tracer.add_attribute_to_current_span(
+            'request_body', '...')
+
     # Add the requests host to attributes
     _tracer.add_attribute_to_current_span(
         HTTP_HOST, dest_url)
@@ -134,6 +139,12 @@ def wrap_session_request(wrapped, instance, args, kwargs):
         _tracer.add_attribute_to_current_span(
             HTTP_STATUS_CODE, result.status_code
         )
+
+        # Add response body for POST and PUT requests
+        if method.upper() in ('POST', 'PUT'):
+            _tracer.add_attribute_to_current_span(
+                'response_body', '...')
+
         _span.set_status(
             utils.status_from_http_code(result.status_code)
         )
