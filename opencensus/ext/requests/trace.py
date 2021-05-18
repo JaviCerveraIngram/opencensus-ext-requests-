@@ -153,7 +153,7 @@ def wrap_session_request(wrapped, instance, args, kwargs):
 
         # Add response body
         if len(result.text) <= MAX_LENGTH:
-            resp = masker.mask_params(masker.mask_fields(json.loads(result)))
+            resp = masker.mask_params(masker.mask_fields(json.loads(result.text)))
             _tracer.add_attribute_to_current_span(RESPONSE_BODY, json.dumps(resp))
         else:
             _tracer.add_attribute_to_current_span(RESPONSE_BODY, FIELD_TOO_BIG)
