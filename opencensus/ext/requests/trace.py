@@ -26,6 +26,8 @@ from opencensus.trace import (
 from opencensus.trace import span as span_module
 from opencensus.trace import utils
 
+from opencensus.ext.masker import masker
+
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -111,7 +113,7 @@ def wrap_session_request(wrapped, instance, args, kwargs):
 
     # Add json body if it is present
     if 'json' in kwargs:
-        body = json.dumps(kwargs['json'])
+        body = json.dumps(masker.mask_params(masker.mask_fields(kwargs['json'])))
         if len(body) <= MAX_LENGTH:
             _tracer.add_attribute_to_current_span(REQUEST_BODY, body)
         else:
@@ -151,7 +153,8 @@ def wrap_session_request(wrapped, instance, args, kwargs):
 
         # Add response body
         if len(result.text) <= MAX_LENGTH:
-            _tracer.add_attribute_to_current_span(RESPONSE_BODY, result.text)
+            resp = masker.mask_params(masker.mask_fields(json.loads(result)))
+            _tracer.add_attribute_to_current_span(RESPONSE_BODY, json.dumps(resp))
         else:
             _tracer.add_attribute_to_current_span(RESPONSE_BODY, FIELD_TOO_BIG)
 
