@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 from copy import deepcopy
 from typing import Any, Dict, List, Tuple, Union
 
@@ -25,15 +24,11 @@ def masked_fields(fields: Union[List[str], Tuple[str]]) -> None:
     __masked_fields = tuple(fields)
 
 
-def mask_fields(data: Union[Dict, List, Tuple]) -> str:
-    return json.dumps(__mask_fields(data))
-
-
-def __mask_fields(data: Union[Dict, List, Tuple]) -> Union[Dict, List, Tuple]:
+def mask_fields(data: Union[Dict, List, Tuple]) -> Union[Dict, List, Tuple]:
     if isinstance(data, dict):
         return __mask_dict(data)
     elif isinstance(data, (list, tuple)):
-        return [__mask_fields(x) for x in data]
+        return [mask_fields(x) for x in data]
     else:
         return data
 
@@ -44,7 +39,7 @@ def __mask_dict(data: Dict) -> Dict:
         if k in __masked_fields:
             data[k] = '*' * len(str(data[k]))
     for k in data.keys():
-        data[k] = __mask_fields(data[k])
+        data[k] = mask_fields(data[k])
     return data
 
 
@@ -53,15 +48,11 @@ def masked_params(params: Union[List[str], Tuple[str]]) -> None:
     __masked_params = tuple(params)
 
 
-def mask_params(data: Union[Dict, List, Tuple]) -> str:
-    return json.dumps(__mask_params(data))
-
-
-def __mask_params(data: Union[Dict, List, Tuple]) -> Union[Dict, List, Tuple]:
+def mask_params(data: Union[Dict, List, Tuple]) -> Union[Dict, List, Tuple]:
     if isinstance(data, dict):
         return __mask_params_dict(data)
     elif isinstance(data, (list, tuple)):
-        return [__mask_params(x) for x in data]
+        return [mask_params(x) for x in data]
     else:
         return data
 
@@ -75,9 +66,9 @@ def __mask_params_dict(data: Dict) -> Dict:
         elif k == 'parameter' and 'value' in data:
             data[k] = __mask_config_param(data, value)
         elif isinstance(value, (dict, list, tuple)):
-            data[k] = __mask_params(value)
+            data[k] = mask_params(value)
     for k in data.keys():
-        data[k] = __mask_params(data[k])
+        data[k] = mask_params(data[k])
     return data
 
 
