@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 
 import requests
@@ -41,6 +42,11 @@ HTTP_PATH = attributes_helper.COMMON_ATTRIBUTES['HTTP_PATH']
 HTTP_ROUTE = attributes_helper.COMMON_ATTRIBUTES['HTTP_ROUTE']
 HTTP_STATUS_CODE = attributes_helper.COMMON_ATTRIBUTES['HTTP_STATUS_CODE']
 HTTP_URL = attributes_helper.COMMON_ATTRIBUTES['HTTP_URL']
+
+MAX_LENGTH = 8192
+REQUEST_BODY = 'Request Body:'
+RESPONSE_BODY = 'Response Body:'
+FIELD_TOO_BIG = '(Field too big)'
 
 
 def trace_integration(tracer=None):
@@ -103,10 +109,13 @@ def wrap_session_request(wrapped, instance, args, kwargs):
     _tracer.add_attribute_to_current_span(
         "component", "HTTP")
 
-    # Add request body for POST and PUT requests
-    if method.upper() in ('POST', 'PUT'):
-        _tracer.add_attribute_to_current_span(
-            'request_body', '...')
+    # Add json body if it is present
+    if 'json' in kwargs:
+        body = json.dumps(kwargs['json'])
+        if len(body) <= MAX_LENGTH:
+            _tracer.add_attribute_to_current_span(REQUEST_BODY, body)
+        else:
+            _tracer.add_attribute_to_current_span(REQUEST_BODY, FIELD_TOO_BIG)
 
     # Add the requests host to attributes
     _tracer.add_attribute_to_current_span(
@@ -140,10 +149,11 @@ def wrap_session_request(wrapped, instance, args, kwargs):
             HTTP_STATUS_CODE, result.status_code
         )
 
-        # Add response body for POST and PUT requests
-        if method.upper() in ('POST', 'PUT'):
-            _tracer.add_attribute_to_current_span(
-                'response_body', '...')
+        # Add response body
+        if len(result.text) <= MAX_LENGTH:
+            _tracer.add_attribute_to_current_span(RESPONSE_BODY, result.text)
+        else:
+            _tracer.add_attribute_to_current_span(RESPONSE_BODY, FIELD_TOO_BIG)
 
         _span.set_status(
             utils.status_from_http_code(result.status_code)
